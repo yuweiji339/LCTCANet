@@ -1,9 +1,6 @@
 
 # LCTCANet
 
-[![Build Status] 
-[![PyPI version]
-
 ## Overview
 
 **LCTCANet** (Lightweight CNN-Transformer Context-Aware Network) is a super-resolution model designed for remote sensing imagery. It integrates both local feature extraction and global context modeling to reconstruct high-fidelity, high-resolution images while maintaining efficiency suitable for edge and mobile deployment.
