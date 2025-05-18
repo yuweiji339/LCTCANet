@@ -1,8 +1,8 @@
-# LCTCANet
+
 # LCTCANet
 
-[![Build Status](https://img.shields.io/github/actions/workflow/status/yourusername/LCTCANet/ci.yml)](https://github.com/yourusername/LCTCANet/actions)  
-[![PyPI version](https://img.shields.io/pypi/v/lctcanet)](https://pypi.org/project/lctcanet)
+[![Build Status] 
+[![PyPI version]
 
 ## Overview
 
@@ -13,7 +13,6 @@
 - **GlobalContextualLocalBlock (GCLB)**: Hybrid module combining multi-head self-attention with convolutional encoding for long-range dependency modeling and fine-grained texture recovery.  
 - **EdgeStructureFusionBlock (ESFB)**: Dual-branch block with edge-aware attention and structural enhancement to fuse detailed edges and contextual structure.  
 - **DeepFeatureExtractionBlock (DFEB)**: Stacked ESFB with residual connections to progressively refine features.  
-- **SubPixelReconstruction**: PixelShuffle-based upsampling head for efficient resolution enhancement.  
 
 ## Features
 
