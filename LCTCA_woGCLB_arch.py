@@ -69,7 +69,7 @@ class SubPixelReconstruction(nn.Module):
         return self.upsample(x)
 
 
-class LCTCASR_woGCLB(nn.Module):
+class LCTCANet_woGCLB(nn.Module):
     def __init__(
         self,
         dim=64,
@@ -104,7 +104,7 @@ if __name__ == '__main__':
     import time
     from thop import profile
 
-    model = LCTCASR_woGCLB().cuda()
+    model = LCTCANet_woGCLB().cuda()
     # Change input tensor to a 64×64 resolution image
     inp = torch.randn(1, 3, 64, 64).cuda()
 
