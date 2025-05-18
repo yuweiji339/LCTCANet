@@ -1,5 +1,4 @@
-
-import torch
+import torch 
 import torch.nn as nn
 import torch.nn.functional as F
 from einops import rearrange
@@ -7,24 +6,25 @@ from torchvision import ops
 import numpy as np
 
 from basicsr.archs.arch_util import trunc_normal_
+from basicsr.utils.registry import ARCH_REGISTRY
 
 from typing import Sequence, Literal, Optional
 from functools import partial
 
-from basicsr.utils.registry import ARCH_REGISTRY
-
-
-#GlobalContextualLocalBlock (GCLBlock) is a hybrid module that integrates local #convolutional encoding and global context modeling via multi-head self-attention. It is #designed to enhance both fine-grained texture recovery and long-range structural #consistency in super-resolution tasks.
+# GlobalContextualLocalBlock (GCLBlock) is a hybrid module that integrates local
+# convolutional encoding and global context modeling via multi-head self-attention.
+# It is designed to enhance both fine-grained texture recovery and long-range
+# structural consistency in super-resolution tasks.
 
 class EdgeStructureFusionBlock(nn.Module):
     def __init__(self, dim):
         super().__init__()
-        # Edge-aware Attention Branch 边缘感知增强
+        # Edge-aware attention branch for enhancing edge information
         self.e_branch = nn.Sequential(
             nn.Conv2d(dim, dim, 3, 1, 1),
             nn.Sigmoid()
         )
-        # Structural Enhancement Branch 结构上下文建模
+        # Structural enhancement branch for modeling contextual structure
         self.t_branch = nn.Sequential(
             nn.Conv2d(dim, dim, 1),
             nn.ReLU(inplace=True),
@@ -40,7 +40,6 @@ class EdgeStructureFusionBlock(nn.Module):
         return self.fusion(fused)         # Final fusion
 
 
-#LGFB
 class DeepFeatureExtractionBlock(nn.Module):
     def __init__(self, dim):
         super().__init__()
@@ -49,16 +48,15 @@ class DeepFeatureExtractionBlock(nn.Module):
     def forward(self, x):
         identity = x
         x = self.esfb(x)
-        return x + identity  # 残差连接增强稳定性
-
+        return x + identity  # Residual connection to improve stability
 
 
 class SubPixelReconstruction(nn.Module):
     def __init__(self, dim, scale):
         super().__init__()
-        # 1) 先利用卷积把通道提升到 dim * scale^2
-        # 2) 再通过 PixelShuffle 还原出更高分辨率特征图
-        # 3) 后面再用几层卷积映射到 3 通道输出
+        # 1) Use convolution to expand channels to dim * scale^2
+        # 2) Use PixelShuffle to reconstruct higher-resolution feature maps
+        # 3) Follow with convolutions to map to 3-channel output
         self.upsample = nn.Sequential(
             nn.Conv2d(dim, dim * scale**2, 3, 1, 1),
             nn.PixelShuffle(scale),
@@ -71,10 +69,6 @@ class SubPixelReconstruction(nn.Module):
         return self.upsample(x)
 
 
-
-
-
-
 class LCTCASR_woGCLB(nn.Module):
     def __init__(
         self,
@@ -82,13 +76,13 @@ class LCTCASR_woGCLB(nn.Module):
         n_blocks=4,
         heads=2,
         scale=4,
-        upscaling_factor=None,  # 映射配置里的字段
+        upscaling_factor=None,  # Field from configuration mapping
         **kwargs
     ):
         super().__init__()
         if upscaling_factor is not None:
-            scale = upscaling_factor  # 如果配置里写了 upscaling_factor，就用它
-        #self.head = nn.Conv2d(3, dim, 3, 1, 1)
+            scale = upscaling_factor  # Use upscaling_factor from config if provided
+
         self.head = nn.Sequential(
             nn.Conv2d(3, dim, 3, 1, 1),
             nn.ReLU(inplace=True),
@@ -106,23 +100,24 @@ class LCTCASR_woGCLB(nn.Module):
         return x
 
 
-
 if __name__ == '__main__':
     import time
     from thop import profile
 
     model = LCTCASR_woGCLB().cuda()
-    # 修改输入张量为 1280x720 分辨率的图像
-    #inp = torch.randn(1, 3, 720, 1280).cuda()
+    # Change input tensor to a 64×64 resolution image
     inp = torch.randn(1, 3, 64, 64).cuda()
+
     start = time.time()
     macs, params = profile(model, inputs=(inp,))
     end = time.time()
-    # 假定每个 MAC 操作包含乘法和加法各一次
-    multi_adds = macs * 2 # 或者叫 FLOPs
-    flops = macs * 2  # 常规估算：1 MAC = 2 FLOPs
-    print("MACs: {:.2f}G".format(macs / 1e9))
-    print("Multi-Adds: {:.2f}G".format(multi_adds / 1e9))# 或者叫 FLOPs
-    print("FLOPs: {:.2f}G".format(flops / 1e9))       # 与 Multi-Adds 一致
-    print("Params: {:.2f}M".format(params / 1e6))
-    print("Time: {:.2f}s".format(end - start))
+
+    # Assume each MAC operation includes one multiplication and one addition
+    multi_adds = macs * 2  # or called FLOPs
+    flops = macs * 2       # Conventional estimate: 1 MAC = 2 FLOPs
+
+    print(f"MACs: {macs/1e9:.2f}G")
+    print(f"Multi-Adds: {multi_adds/1e9:.2f}G")
+    print(f"FLOPs: {flops/1e9:.2f}G")  # Same as Multi-Adds
+    print(f"Params: {params/1e6:.2f}M")
+    print(f"Time: {end - start:.2f}s")
